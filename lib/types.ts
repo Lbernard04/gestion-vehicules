@@ -5,6 +5,7 @@ export interface Vehicle {
   type: string | null;
   active: boolean;
   created_at: string;
+  updated_at: string;
 }
 
 export interface Entity {
@@ -13,6 +14,7 @@ export interface Entity {
   email: string | null;
   active: boolean;
   created_at: string;
+  updated_at: string;
 }
 
 export interface Reservation {
@@ -23,4 +25,10 @@ export interface Reservation {
   end_at: string;
   comment: string | null;
   created_at: string;
+  updated_at: string;
+}
+
+export interface ReservationWithRelations extends Reservation {
+  vehicle: Vehicle | null;
+  entity: Entity | null;
 }

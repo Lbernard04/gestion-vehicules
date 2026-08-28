@@ -24,7 +24,7 @@ create table if not exists public.entities (
 
 create table if not exists public.reservations (
   id uuid primary key default gen_random_uuid(),
-  vehicle_id uuid not null references public.vehicles(id) on delete cascade,
+  vehicle_id uuid not null references public.vehicles(id) on delete restrict,
   entity_id uuid not null references public.entities(id) on delete restrict,
   start_at timestamptz not null,
   end_at timestamptz not null,
@@ -72,80 +72,61 @@ create trigger reservations_set_updated_at
 before update on public.reservations
 for each row execute function public.set_updated_at();
 
--- RLS : application sans authentification, accès ouvert au rôle anon.
+-- RLS : pas d'authentification pour le moment, toute personne ayant le lien
+-- (donc la clé publique "anon") peut lire et modifier les données.
+-- ATTENTION : cela signifie qu'il n'y a aucun contrôle d'accès applicatif.
+-- À restreindre dès qu'une authentification sera mise en place.
 alter table public.vehicles enable row level security;
 alter table public.entities enable row level security;
 alter table public.reservations enable row level security;
 
--- Le rôle anon doit avoir les privilèges de base sur les tables (RLS filtre ensuite les lignes).
-grant usage on schema public to anon;
-grant select, insert, update, delete on public.vehicles to anon;
-grant select, insert, update, delete on public.entities to anon;
-grant select, insert, update, delete on public.reservations to anon;
-
--- Pour le MVP, l'application (rôle anon, sans login) peut lire et modifier toutes les données.
-drop policy if exists "authenticated_read_vehicles" on public.vehicles;
-drop policy if exists "authenticated_insert_vehicles" on public.vehicles;
-drop policy if exists "authenticated_update_vehicles" on public.vehicles;
-drop policy if exists "authenticated_delete_vehicles" on public.vehicles;
-
 drop policy if exists "anon_read_vehicles" on public.vehicles;
 create policy "anon_read_vehicles"
-on public.vehicles for select to anon using (true);
+on public.vehicles for select to anon, authenticated using (true);
 
 drop policy if exists "anon_insert_vehicles" on public.vehicles;
 create policy "anon_insert_vehicles"
-on public.vehicles for insert to anon with check (true);
+on public.vehicles for insert to anon, authenticated with check (true);
 
 drop policy if exists "anon_update_vehicles" on public.vehicles;
 create policy "anon_update_vehicles"
-on public.vehicles for update to anon using (true) with check (true);
+on public.vehicles for update to anon, authenticated using (true) with check (true);
 
 drop policy if exists "anon_delete_vehicles" on public.vehicles;
 create policy "anon_delete_vehicles"
-on public.vehicles for delete to anon using (true);
-
-drop policy if exists "authenticated_read_entities" on public.entities;
-drop policy if exists "authenticated_insert_entities" on public.entities;
-drop policy if exists "authenticated_update_entities" on public.entities;
-drop policy if exists "authenticated_delete_entities" on public.entities;
+on public.vehicles for delete to anon, authenticated using (true);
 
 drop policy if exists "anon_read_entities" on public.entities;
 create policy "anon_read_entities"
-on public.entities for select to anon using (true);
+on public.entities for select to anon, authenticated using (true);
 
 drop policy if exists "anon_insert_entities" on public.entities;
 create policy "anon_insert_entities"
-on public.entities for insert to anon with check (true);
+on public.entities for insert to anon, authenticated with check (true);
 
 drop policy if exists "anon_update_entities" on public.entities;
 create policy "anon_update_entities"
-on public.entities for update to anon using (true) with check (true);
+on public.entities for update to anon, authenticated using (true) with check (true);
 
 drop policy if exists "anon_delete_entities" on public.entities;
 create policy "anon_delete_entities"
-on public.entities for delete to anon using (true);
-
-drop policy if exists "authenticated_read_reservations" on public.reservations;
-drop policy if exists "authenticated_insert_reservations" on public.reservations;
-drop policy if exists "authenticated_update_reservations" on public.reservations;
-drop policy if exists "authenticated_delete_reservations" on public.reservations;
+on public.entities for delete to anon, authenticated using (true);
 
 drop policy if exists "anon_read_reservations" on public.reservations;
 create policy "anon_read_reservations"
-on public.reservations for select to anon using (true);
+on public.reservations for select to anon, authenticated using (true);
 
 drop policy if exists "anon_insert_reservations" on public.reservations;
 create policy "anon_insert_reservations"
-on public.reservations for insert to anon with check (true);
+on public.reservations for insert to anon, authenticated with check (true);
 
 drop policy if exists "anon_update_reservations" on public.reservations;
 create policy "anon_update_reservations"
-on public.reservations for update to anon using (true) with check (true);
+on public.reservations for update to anon, authenticated using (true) with check (true);
 
 drop policy if exists "anon_delete_reservations" on public.reservations;
 create policy "anon_delete_reservations"
-on public.reservations for delete to anon using (true);
+on public.reservations for delete to anon, authenticated using (true);
 
 -- Active le flux Realtime sur les trois tables.
 alter table public.vehicles replica identity full;

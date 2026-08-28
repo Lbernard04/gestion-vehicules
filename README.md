@@ -20,6 +20,14 @@ npm run dev
 
 Créer ensuite un fichier `.env.local` à partir de `.env.example` avec les informations du projet Supabase.
 
+## Pages
+
+- `/` — Tableau de bord (véhicules actifs, disponibilité, réservations du jour)
+- `/vehicules` — Gestion des véhicules (CRUD)
+- `/entites` — Gestion des entités (CRUD)
+- `/reservations` — Liste des réservations (CRUD)
+- `/planning` — Planning hebdomadaire par véhicule
+
 ## Base de données
 
 Le schéma SQL est disponible dans `supabase/schema.sql`. Il doit être exécuté dans le SQL Editor du projet Supabase.
