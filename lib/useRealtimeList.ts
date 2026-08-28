@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from './supabase';
-import { toFriendlyError } from './queries';
+import { getErrorMessage } from './queries';
 
 export function useRealtimeList<T>(table: string, fetcher: () => Promise<T[]>) {
   const [items, setItems] = useState<T[]>([]);
@@ -15,13 +15,7 @@ export function useRealtimeList<T>(table: string, fetcher: () => Promise<T[]>) {
       setItems(data);
       setError(null);
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else if (err && typeof err === 'object' && 'message' in err) {
-        setError(toFriendlyError(err as { code?: string; message: string }));
-      } else {
-        setError('Erreur inconnue.');
-      }
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

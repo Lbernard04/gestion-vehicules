@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from 'react';
 import Modal from './Modal';
-import { createEntity, toFriendlyError, updateEntity } from '../lib/queries';
+import { createEntity, getErrorMessage, updateEntity } from '../lib/queries';
 import type { Entity } from '../lib/types';
 
 export default function EntityFormModal({
@@ -38,7 +38,7 @@ export default function EntityFormModal({
       }
       onSaved();
     } catch (err) {
-      setError(err instanceof Error ? toFriendlyError({ message: err.message, code: (err as { code?: string }).code }) : 'Erreur inconnue.');
+      setError(getErrorMessage(err));
     } finally {
       setSaving(false);
     }

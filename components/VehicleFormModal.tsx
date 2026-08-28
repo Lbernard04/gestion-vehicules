@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from 'react';
 import Modal from './Modal';
-import { createVehicle, toFriendlyError, updateVehicle } from '../lib/queries';
+import { createVehicle, getErrorMessage, updateVehicle } from '../lib/queries';
 import type { Vehicle } from '../lib/types';
 
 export default function VehicleFormModal({
@@ -43,7 +43,7 @@ export default function VehicleFormModal({
       }
       onSaved();
     } catch (err) {
-      setError(err instanceof Error ? toFriendlyError({ message: err.message, code: (err as { code?: string }).code }) : 'Erreur inconnue.');
+      setError(getErrorMessage(err));
     } finally {
       setSaving(false);
     }

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import ConfigWarning from '../../components/ConfigWarning';
 import StatusBadge from '../../components/StatusBadge';
 import EntityFormModal from '../../components/EntityFormModal';
-import { deleteEntity, listEntities, toFriendlyError, updateEntity } from '../../lib/queries';
+import { deleteEntity, getErrorMessage, listEntities, updateEntity } from '../../lib/queries';
 import { useRealtimeList } from '../../lib/useRealtimeList';
 import { supabase } from '../../lib/supabase';
 import type { Entity } from '../../lib/types';
@@ -19,7 +19,7 @@ export default function EntitiesPage() {
     try {
       await updateEntity(entity.id, { active: !entity.active });
     } catch (err) {
-      setActionError(err instanceof Error ? toFriendlyError({ message: err.message, code: (err as { code?: string }).code }) : 'Erreur inconnue.');
+      setActionError(getErrorMessage(err));
     }
   }
 
@@ -29,11 +29,7 @@ export default function EntitiesPage() {
     try {
       await deleteEntity(entity.id);
     } catch (err) {
-      setActionError(
-        err instanceof Error
-          ? toFriendlyError({ message: err.message, code: (err as { code?: string }).code })
-          : 'Erreur inconnue.'
-      );
+      setActionError(getErrorMessage(err));
     }
   }
 

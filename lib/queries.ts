@@ -26,6 +26,18 @@ export function toFriendlyError(error: { code?: string; message: string }): stri
   return error.message;
 }
 
+// Extrait un message affichable depuis n'importe quelle erreur interceptée
+// (PostgrestError de Supabase, Error classique, ou valeur inattendue).
+export function getErrorMessage(err: unknown): string {
+  if (err instanceof Error) {
+    return err.message;
+  }
+  if (err && typeof err === 'object' && 'message' in err) {
+    return toFriendlyError(err as { code?: string; message: string });
+  }
+  return 'Erreur inconnue.';
+}
+
 // ---------- Véhicules ----------
 
 export async function listVehicles(): Promise<Vehicle[]> {

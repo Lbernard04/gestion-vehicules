@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from 'react';
 import Modal from './Modal';
-import { createReservation, hasConflict, toFriendlyError, updateReservation } from '../lib/queries';
+import { createReservation, getErrorMessage, hasConflict, updateReservation } from '../lib/queries';
 import { fromLocalInputValue, toLocalInputValue } from '../lib/date';
 import type { Entity, ReservationWithRelations, Vehicle } from '../lib/types';
 
@@ -90,7 +90,7 @@ export default function ReservationFormModal({
       }
       onSaved();
     } catch (err) {
-      setError(err instanceof Error ? toFriendlyError({ message: err.message, code: (err as { code?: string }).code }) : 'Erreur inconnue.');
+      setError(getErrorMessage(err));
     } finally {
       setSaving(false);
     }

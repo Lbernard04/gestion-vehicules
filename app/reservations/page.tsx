@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import ConfigWarning from '../../components/ConfigWarning';
 import ReservationFormModal from '../../components/ReservationFormModal';
-import { deleteReservation, listEntities, listReservations, listVehicles, toFriendlyError } from '../../lib/queries';
+import { deleteReservation, getErrorMessage, listEntities, listReservations, listVehicles } from '../../lib/queries';
 import { useRealtimeList } from '../../lib/useRealtimeList';
 import { formatRange } from '../../lib/date';
 import { supabase } from '../../lib/supabase';
@@ -23,11 +23,7 @@ export default function ReservationsPage() {
     try {
       await deleteReservation(reservation.id);
     } catch (err) {
-      setActionError(
-        err instanceof Error
-          ? toFriendlyError({ message: err.message, code: (err as { code?: string }).code })
-          : 'Erreur inconnue.'
-      );
+      setActionError(getErrorMessage(err));
     }
   }
 

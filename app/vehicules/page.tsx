@@ -4,7 +4,7 @@ import { useState } from 'react';
 import ConfigWarning from '../../components/ConfigWarning';
 import StatusBadge from '../../components/StatusBadge';
 import VehicleFormModal from '../../components/VehicleFormModal';
-import { deleteVehicle, listVehicles, toFriendlyError, updateVehicle } from '../../lib/queries';
+import { deleteVehicle, getErrorMessage, listVehicles, updateVehicle } from '../../lib/queries';
 import { useRealtimeList } from '../../lib/useRealtimeList';
 import { supabase } from '../../lib/supabase';
 import type { Vehicle } from '../../lib/types';
@@ -19,7 +19,7 @@ export default function VehiclesPage() {
     try {
       await updateVehicle(vehicle.id, { active: !vehicle.active });
     } catch (err) {
-      setActionError(err instanceof Error ? toFriendlyError({ message: err.message, code: (err as { code?: string }).code }) : 'Erreur inconnue.');
+      setActionError(getErrorMessage(err));
     }
   }
 
@@ -29,11 +29,7 @@ export default function VehiclesPage() {
     try {
       await deleteVehicle(vehicle.id);
     } catch (err) {
-      setActionError(
-        err instanceof Error
-          ? toFriendlyError({ message: err.message, code: (err as { code?: string }).code })
-          : 'Erreur inconnue.'
-      );
+      setActionError(getErrorMessage(err));
     }
   }
 
