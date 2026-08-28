@@ -89,7 +89,7 @@ export default function PlanningPage() {
             <div key={vehicle.id} style={{ display: 'contents' }}>
               <div className="planning-vehicle-cell" style={{ opacity: vehicle.active ? 1 : 0.55 }}>
                 <span className="planning-vehicle-name">{vehicle.name}</span>
-                <span className="planning-vehicle-plate">{vehicle.registration}</span>
+                {vehicle.registration && <span className="planning-vehicle-plate">{vehicle.registration}</span>}
               </div>
               {days.map((day, i) => (
                 <div key={i} className="planning-cell">

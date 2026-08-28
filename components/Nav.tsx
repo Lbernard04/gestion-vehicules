@@ -5,10 +5,10 @@ import { usePathname } from 'next/navigation';
 
 const LINKS = [
   { href: '/', label: 'Tableau de bord' },
+  { href: '/planning', label: 'Planning' },
   { href: '/vehicules', label: 'Véhicules' },
   { href: '/entites', label: 'Entités' },
   { href: '/reservations', label: 'Réservations' },
-  { href: '/planning', label: 'Planning' },
 ];
 
 export default function Nav() {

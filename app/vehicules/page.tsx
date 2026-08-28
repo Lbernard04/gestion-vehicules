@@ -24,7 +24,7 @@ export default function VehiclesPage() {
   }
 
   async function handleDelete(vehicle: Vehicle) {
-    if (!confirm(`Supprimer définitivement « ${vehicle.name} » (${vehicle.registration}) ?`)) return;
+    if (!confirm(`Supprimer définitivement « ${vehicle.name} »${vehicle.registration ? ` (${vehicle.registration})` : ''} ?`)) return;
     setActionError(null);
     try {
       await deleteVehicle(vehicle.id);
@@ -73,7 +73,7 @@ export default function VehiclesPage() {
                 {vehicles.map((vehicle) => (
                   <tr key={vehicle.id}>
                     <td>{vehicle.name}</td>
-                    <td className="plate">{vehicle.registration}</td>
+                    <td className="plate">{vehicle.registration || '—'}</td>
                     <td style={{ color: 'var(--text-muted)' }}>{vehicle.type || '—'}</td>
                     <td>
                       {vehicle.active ? (

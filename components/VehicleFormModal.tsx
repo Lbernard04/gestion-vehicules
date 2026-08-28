@@ -24,8 +24,8 @@ export default function VehicleFormModal({
     event.preventDefault();
     setError(null);
 
-    if (!name.trim() || !registration.trim()) {
-      setError('Le nom et l’immatriculation sont obligatoires.');
+    if (!name.trim()) {
+      setError('Le nom est obligatoire.');
       return;
     }
 
@@ -33,7 +33,7 @@ export default function VehicleFormModal({
     try {
       const payload = {
         name: name.trim(),
-        registration: registration.trim().toUpperCase(),
+        registration: registration.trim() ? registration.trim().toUpperCase() : null,
         type: type.trim() || null,
       };
       if (vehicle) {
@@ -66,7 +66,7 @@ export default function VehicleFormModal({
         </div>
 
         <div className="field">
-          <label htmlFor="vehicle-registration">Immatriculation</label>
+          <label htmlFor="vehicle-registration">Immatriculation (optionnel)</label>
           <input
             id="vehicle-registration"
             value={registration}

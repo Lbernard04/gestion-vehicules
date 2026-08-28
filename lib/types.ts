@@ -1,7 +1,7 @@
 export interface Vehicle {
   id: string;
   name: string;
-  registration: string;
+  registration: string | null;
   type: string | null;
   active: boolean;
   created_at: string;

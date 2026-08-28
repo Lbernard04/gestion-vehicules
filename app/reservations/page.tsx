@@ -74,7 +74,7 @@ export default function ReservationsPage() {
                 {sorted.map((r) => (
                   <tr key={r.id}>
                     <td className="tabular">{formatRange(r.start_at, r.end_at)}</td>
-                    <td>{r.vehicle ? `${r.vehicle.name} (${r.vehicle.registration})` : '—'}</td>
+                    <td>{r.vehicle ? `${r.vehicle.name}${r.vehicle.registration ? ` (${r.vehicle.registration})` : ''}` : '—'}</td>
                     <td>{r.entity?.name ?? '—'}</td>
                     <td style={{ color: 'var(--text-muted)' }}>{r.comment || '—'}</td>
                     <td>

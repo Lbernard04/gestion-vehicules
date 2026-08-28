@@ -6,12 +6,15 @@ create extension if not exists btree_gist;
 create table if not exists public.vehicles (
   id uuid primary key default gen_random_uuid(),
   name text not null,
-  registration text not null unique,
+  registration text unique,
   type text,
   active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- L'immatriculation est optionnelle (table déjà existante : on retire la contrainte).
+alter table public.vehicles alter column registration drop not null;
 
 create table if not exists public.entities (
   id uuid primary key default gen_random_uuid(),

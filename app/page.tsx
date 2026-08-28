@@ -87,7 +87,7 @@ export default function DashboardPage() {
                     {activeVehicles.map((v) => (
                       <tr key={v.id}>
                         <td>{v.name}</td>
-                        <td className="plate">{v.registration}</td>
+                        <td className="plate">{v.registration || '—'}</td>
                         <td>
                           {busyVehicleIds.has(v.id) ? (
                             <StatusBadge status="busy" label="En réservation" />
@@ -122,7 +122,7 @@ export default function DashboardPage() {
                     {todayReservations.map((r) => (
                       <tr key={r.id}>
                         <td className="tabular">{formatRange(r.start_at, r.end_at)}</td>
-                        <td>{r.vehicle ? `${r.vehicle.name} (${r.vehicle.registration})` : '—'}</td>
+                        <td>{r.vehicle ? `${r.vehicle.name}${r.vehicle.registration ? ` (${r.vehicle.registration})` : ''}` : '—'}</td>
                         <td>{r.entity?.name ?? '—'}</td>
                         <td style={{ color: 'var(--text-muted)' }}>{r.comment || '—'}</td>
                       </tr>

@@ -107,7 +107,8 @@ export default function ReservationFormModal({
             {vehicles.length === 0 && <option value="">Aucun véhicule</option>}
             {vehicles.map((v) => (
               <option key={v.id} value={v.id} disabled={!v.active}>
-                {v.name} — {v.registration}
+                {v.name}
+                {v.registration ? ` — ${v.registration}` : ''}
                 {!v.active ? ' (désactivé)' : ''}
               </option>
             ))}

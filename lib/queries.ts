@@ -49,7 +49,7 @@ export async function listVehicles(): Promise<Vehicle[]> {
 
 export async function createVehicle(input: {
   name: string;
-  registration: string;
+  registration: string | null;
   type: string | null;
 }): Promise<void> {
   const client = requireClient();
