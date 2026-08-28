@@ -36,6 +36,8 @@ create table if not exists public.reservations (
 
 -- Empêche deux réservations qui se chevauchent pour le même véhicule.
 alter table public.reservations
+  drop constraint if exists reservations_no_overlap;
+alter table public.reservations
   add constraint reservations_no_overlap
   exclude using gist (
     vehicle_id with =,
@@ -79,6 +81,12 @@ for each row execute function public.set_updated_at();
 alter table public.vehicles enable row level security;
 alter table public.entities enable row level security;
 alter table public.reservations enable row level security;
+
+-- Le rôle anon doit avoir les privilèges de base sur les tables (RLS filtre ensuite les lignes).
+grant usage on schema public to anon;
+grant select, insert, update, delete on public.vehicles to anon;
+grant select, insert, update, delete on public.entities to anon;
+grant select, insert, update, delete on public.reservations to anon;
 
 drop policy if exists "anon_read_vehicles" on public.vehicles;
 create policy "anon_read_vehicles"
