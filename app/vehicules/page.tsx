@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import AdminGate from '../../components/AdminGate';
 import ConfigWarning from '../../components/ConfigWarning';
 import StatusBadge from '../../components/StatusBadge';
 import VehicleFormModal from '../../components/VehicleFormModal';
@@ -10,6 +11,14 @@ import { supabase } from '../../lib/supabase';
 import type { Vehicle } from '../../lib/types';
 
 export default function VehiclesPage() {
+  return (
+    <AdminGate>
+      <VehiclesPageContent />
+    </AdminGate>
+  );
+}
+
+function VehiclesPageContent() {
   const { items: vehicles, loading, error, reload } = useRealtimeList('vehicles', listVehicles);
   const [modalVehicle, setModalVehicle] = useState<Vehicle | null | 'new'>(null);
   const [actionError, setActionError] = useState<string | null>(null);

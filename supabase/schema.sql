@@ -168,3 +168,89 @@ begin
     alter publication supabase_realtime add table public.reservations;
   end if;
 end $$;
+
+-- ---------- Historique des modifications ----------
+-- Journalise automatiquement chaque création/modification/suppression sur les
+-- 3 tables métier, quel que soit l'appelant (le "mode admin" côté app n'est
+-- qu'une protection d'affichage, pas une restriction au niveau base de données).
+
+create table if not exists public.activity_log (
+  id uuid primary key default gen_random_uuid(),
+  table_name text not null,
+  record_id uuid not null,
+  action text not null check (action in ('insert', 'update', 'delete')),
+  old_data jsonb,
+  new_data jsonb,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists activity_log_created_at_idx on public.activity_log(created_at desc);
+
+alter table public.activity_log enable row level security;
+
+grant select on public.activity_log to anon;
+
+drop policy if exists "anon_read_activity_log" on public.activity_log;
+create policy "anon_read_activity_log"
+on public.activity_log for select to anon, authenticated using (true);
+
+-- security definer : le trigger peut écrire dans activity_log même si
+-- l'appelant (rôle anon) n'a pas de droit d'écriture direct sur cette table.
+create or replace function public.log_activity()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  rec_id uuid;
+begin
+  if tg_op = 'DELETE' then
+    rec_id := old.id;
+  else
+    rec_id := new.id;
+  end if;
+
+  insert into public.activity_log (table_name, record_id, action, old_data, new_data)
+  values (
+    tg_table_name,
+    rec_id,
+    lower(tg_op),
+    case when tg_op in ('UPDATE', 'DELETE') then to_jsonb(old) else null end,
+    case when tg_op in ('INSERT', 'UPDATE') then to_jsonb(new) else null end
+  );
+
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists vehicles_log_activity on public.vehicles;
+create trigger vehicles_log_activity
+after insert or update or delete on public.vehicles
+for each row execute function public.log_activity();
+
+drop trigger if exists entities_log_activity on public.entities;
+create trigger entities_log_activity
+after insert or update or delete on public.entities
+for each row execute function public.log_activity();
+
+drop trigger if exists reservations_log_activity on public.reservations;
+create trigger reservations_log_activity
+after insert or update or delete on public.reservations
+for each row execute function public.log_activity();
+
+-- Active le flux Realtime sur l'historique aussi.
+alter table public.activity_log replica identity full;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'activity_log'
+  ) then
+    alter publication supabase_realtime add table public.activity_log;
+  end if;
+end $$;

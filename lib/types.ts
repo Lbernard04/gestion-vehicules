@@ -32,3 +32,13 @@ export interface ReservationWithRelations extends Reservation {
   vehicle: Vehicle | null;
   entity: Entity | null;
 }
+
+export interface ActivityLogEntry {
+  id: string;
+  table_name: 'vehicles' | 'entities' | 'reservations';
+  record_id: string;
+  action: 'insert' | 'update' | 'delete';
+  old_data: Record<string, unknown> | null;
+  new_data: Record<string, unknown> | null;
+  created_at: string;
+}

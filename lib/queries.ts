@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { Entity, Reservation, ReservationWithRelations, Vehicle } from './types';
+import type { ActivityLogEntry, Entity, Reservation, ReservationWithRelations, Vehicle } from './types';
 
 // Message d'erreur unique si les variables d'environnement Supabase manquent,
 // pour que l'UI puisse afficher un message clair au lieu d'un crash silencieux.
@@ -141,6 +141,19 @@ export async function deleteReservation(id: string): Promise<void> {
   const client = requireClient();
   const { error } = await client.from('reservations').delete().eq('id', id);
   if (error) throw error;
+}
+
+// ---------- Historique ----------
+
+export async function listActivityLog(): Promise<ActivityLogEntry[]> {
+  const client = requireClient();
+  const { data, error } = await client
+    .from('activity_log')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(300);
+  if (error) throw error;
+  return (data ?? []) as ActivityLogEntry[];
 }
 
 // Vérification côté client (avant envoi) qu'aucune réservation existante ne

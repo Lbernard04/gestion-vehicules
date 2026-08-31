@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google';
 import Nav from '../components/Nav';
+import { AdminProvider } from '../lib/adminAuth';
 import './globals.css';
 
 const spaceGrotesk = Space_Grotesk({
@@ -30,8 +31,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="fr" className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable}`}>
       <body>
-        <Nav />
-        {children}
+        <AdminProvider>
+          <Nav />
+          {children}
+        </AdminProvider>
       </body>
     </html>
   );

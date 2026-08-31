@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import AdminGate from '../../components/AdminGate';
 import ConfigWarning from '../../components/ConfigWarning';
 import StatusBadge from '../../components/StatusBadge';
 import EntityFormModal from '../../components/EntityFormModal';
@@ -10,6 +11,14 @@ import { supabase } from '../../lib/supabase';
 import type { Entity } from '../../lib/types';
 
 export default function EntitiesPage() {
+  return (
+    <AdminGate>
+      <EntitiesPageContent />
+    </AdminGate>
+  );
+}
+
+function EntitiesPageContent() {
   const { items: entities, loading, error, reload } = useRealtimeList('entities', listEntities);
   const [modalEntity, setModalEntity] = useState<Entity | null | 'new'>(null);
   const [actionError, setActionError] = useState<string | null>(null);
