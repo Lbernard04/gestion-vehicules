@@ -1,7 +1,9 @@
 'use client';
 
+import { FormEvent, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import Modal from './Modal';
 import { useAdmin } from '../lib/adminAuth';
 
 const USER_LINKS = [
@@ -19,13 +21,33 @@ const ADMIN_LINKS = [
 export default function Nav() {
   const pathname = usePathname();
   const router = useRouter();
-  const { isAdmin, lock } = useAdmin();
+  const { isAdmin, unlock, lock } = useAdmin();
+  const [showCodeModal, setShowCodeModal] = useState(false);
+  const [code, setCode] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const links = isAdmin ? [...USER_LINKS, ...ADMIN_LINKS] : USER_LINKS;
 
   function handleLock() {
     lock();
     router.push('/');
+  }
+
+  function handleUnlockSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (unlock(code)) {
+      setShowCodeModal(false);
+      setCode('');
+      setError(null);
+    } else {
+      setError('Code incorrect.');
+    }
+  }
+
+  function closeModal() {
+    setShowCodeModal(false);
+    setCode('');
+    setError(null);
   }
 
   return (
@@ -50,11 +72,37 @@ export default function Nav() {
             Quitter le mode admin
           </button>
         ) : (
-          <Link href="/admin" className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto' }}>
+          <button className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto' }} onClick={() => setShowCodeModal(true)}>
             Mode admin
-          </Link>
+          </button>
         )}
       </div>
+
+      {showCodeModal && (
+        <Modal title="Accès administrateur" onClose={closeModal}>
+          <form onSubmit={handleUnlockSubmit}>
+            {error && <div className="form-error">{error}</div>}
+            <div className="field">
+              <label htmlFor="nav-admin-code">Code</label>
+              <input
+                id="nav-admin-code"
+                type="password"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div className="form-actions">
+              <button type="button" className="btn btn-ghost" onClick={closeModal}>
+                Annuler
+              </button>
+              <button type="submit" className="btn btn-primary">
+                Déverrouiller
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 }
