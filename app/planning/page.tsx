@@ -110,12 +110,13 @@ export default function PlanningPage() {
                         key={r.id}
                         className="planning-chip"
                         onClick={() => setModalReservation(r)}
-                        title={[r.comment, r.driver_note].filter(Boolean).join(' — ') || undefined}
+                        title={[r.comment, r.driver_name && `Conducteur : ${r.driver_name}`].filter(Boolean).join(' — ') || undefined}
                       >
                         <strong>
                           {formatTime(r.start_at)}–{formatTime(r.end_at)}
                         </strong>
                         {r.entity?.name ?? '—'}
+                        {r.driver_name ? ` · ${r.driver_name}` : ''}
                       </button>
                     ))}
                   </div>

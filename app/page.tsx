@@ -7,6 +7,7 @@ import VehicleWarnings from '../components/VehicleWarnings';
 import { listReservations, listVehicleWarnings, listVehicles } from '../lib/queries';
 import { useRealtimeList } from '../lib/useRealtimeList';
 import { formatRange, isWithinRange } from '../lib/date';
+import { FUEL_LABELS } from '../lib/fuel';
 import { supabase } from '../lib/supabase';
 
 export default function DashboardPage() {
@@ -82,6 +83,7 @@ export default function DashboardPage() {
                     <tr>
                       <th>Véhicule</th>
                       <th>Immatriculation</th>
+                      <th>Carburant</th>
                       <th>Statut</th>
                       <th>Avertissements</th>
                     </tr>
@@ -91,6 +93,9 @@ export default function DashboardPage() {
                       <tr key={v.id}>
                         <td>{v.name}</td>
                         <td className="plate">{v.registration || '—'}</td>
+                        <td style={{ color: 'var(--text-muted)' }}>
+                          {v.fuel_type ? FUEL_LABELS[v.fuel_type] : '—'}
+                        </td>
                         <td>
                           {busyVehicleIds.has(v.id) ? (
                             <StatusBadge status="busy" label="En réservation" />
@@ -125,7 +130,7 @@ export default function DashboardPage() {
                       <th>Véhicule</th>
                       <th>Entité</th>
                       <th>Commentaire</th>
-                      <th>Message conducteur</th>
+                      <th>Conducteur</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -135,7 +140,7 @@ export default function DashboardPage() {
                         <td>{r.vehicle ? `${r.vehicle.name}${r.vehicle.registration ? ` (${r.vehicle.registration})` : ''}` : '—'}</td>
                         <td>{r.entity?.name ?? '—'}</td>
                         <td style={{ color: 'var(--text-muted)' }}>{r.comment || '—'}</td>
-                        <td style={{ color: 'var(--text-muted)' }}>{r.driver_note || '—'}</td>
+                        <td style={{ color: 'var(--text-muted)' }}>{r.driver_name || '—'}</td>
                       </tr>
                     ))}
                   </tbody>

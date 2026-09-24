@@ -153,7 +153,7 @@ export async function createReservation(input: {
   start_at: string;
   end_at: string;
   comment: string | null;
-  driver_note: string | null;
+  driver_name: string | null;
 }): Promise<void> {
   const client = requireClient();
   const { error } = await client.from('reservations').insert(input);
@@ -162,7 +162,7 @@ export async function createReservation(input: {
 
 export async function updateReservation(
   id: string,
-  input: Partial<Pick<Reservation, 'vehicle_id' | 'entity_id' | 'start_at' | 'end_at' | 'comment' | 'driver_note'>>
+  input: Partial<Pick<Reservation, 'vehicle_id' | 'entity_id' | 'start_at' | 'end_at' | 'comment' | 'driver_name'>>
 ): Promise<void> {
   const client = requireClient();
   const { error } = await client.from('reservations').update(input).eq('id', id);

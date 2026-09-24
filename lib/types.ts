@@ -36,7 +36,7 @@ export interface Reservation {
   start_at: string;
   end_at: string;
   comment: string | null;
-  driver_note: string | null;
+  driver_name: string | null;
   created_at: string;
   updated_at: string;
 }

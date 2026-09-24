@@ -44,7 +44,7 @@ export default function ReservationFormModal({
   );
   const [endAt, setEndAt] = useState(toLocalInputValue(reservation?.end_at ?? defaultEnd()));
   const [comment, setComment] = useState(reservation?.comment ?? '');
-  const [driverNote, setDriverNote] = useState(reservation?.driver_note ?? '');
+  const [driverName, setDriverName] = useState(reservation?.driver_name ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -99,7 +99,7 @@ export default function ReservationFormModal({
         start_at: startIso,
         end_at: endIso,
         comment: comment.trim() || null,
-        driver_note: driverNote.trim() || null,
+        driver_name: driverName.trim() || null,
       };
 
       if (reservation) {
@@ -159,6 +159,17 @@ export default function ReservationFormModal({
           </select>
         </div>
 
+        <div className="field">
+          <label htmlFor="reservation-driver-name">Conducteur (optionnel)</label>
+          <input
+            id="reservation-driver-name"
+            type="text"
+            value={driverName}
+            onChange={(e) => setDriverName(e.target.value)}
+            placeholder="Nom du conducteur"
+          />
+        </div>
+
         <div className="field-row">
           <div className="field">
             <label htmlFor="reservation-start">Début</label>
@@ -188,17 +199,6 @@ export default function ReservationFormModal({
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Motif du déplacement, précisions…"
-          />
-        </div>
-
-        <div className="field">
-          <label htmlFor="reservation-driver-note">Message pour le conducteur (optionnel)</label>
-          <textarea
-            id="reservation-driver-note"
-            rows={2}
-            value={driverNote}
-            onChange={(e) => setDriverNote(e.target.value)}
-            placeholder="Ex : badge dans la boîte à gants, code du parking, point de retour…"
           />
         </div>
 

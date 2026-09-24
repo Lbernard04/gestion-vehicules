@@ -84,14 +84,15 @@ create table if not exists public.reservations (
   start_at timestamptz not null,
   end_at timestamptz not null,
   comment text,
-  driver_note text,
+  driver_name text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint reservations_dates_valid check (end_at > start_at)
 );
 
--- Message libre à destination du conducteur (table déjà existante : on ajoute la colonne).
-alter table public.reservations add column if not exists driver_note text;
+-- Nom du conducteur, en texte libre (table déjà existante : on ajoute la colonne).
+alter table public.reservations add column if not exists driver_name text;
+alter table public.reservations drop column if exists driver_note;
 
 -- Empêche deux réservations qui se chevauchent pour le même véhicule.
 alter table public.reservations

@@ -54,7 +54,7 @@ export default function ReservationsPage() {
   const sorted = useMemo(() => {
     const withStatus = reservations.map((r) => ({ r, status: getReservationStatus(r.start_at, r.end_at, now) }));
     const visible = showPast ? withStatus : withStatus.filter((x) => x.status !== 'past');
-    return visible.sort((a, b) => a.r.start_at.localeCompare(b.r.start_at));
+    return visible.sort((a, b) => b.r.start_at.localeCompare(a.r.start_at));
   }, [reservations, now, showPast]);
 
   const hiddenPastCount = reservations.filter((r) => getReservationStatus(r.start_at, r.end_at, now) === 'past').length;
@@ -107,7 +107,7 @@ export default function ReservationsPage() {
                   <th>Véhicule</th>
                   <th>Entité</th>
                   <th>Commentaire</th>
-                  <th>Message conducteur</th>
+                  <th>Conducteur</th>
                   <th></th>
                 </tr>
               </thead>
@@ -121,7 +121,7 @@ export default function ReservationsPage() {
                     <td>{r.vehicle ? `${r.vehicle.name}${r.vehicle.registration ? ` (${r.vehicle.registration})` : ''}` : '—'}</td>
                     <td>{r.entity?.name ?? '—'}</td>
                     <td style={{ color: 'var(--text-muted)' }}>{r.comment || '—'}</td>
-                    <td style={{ color: 'var(--text-muted)' }}>{r.driver_note || '—'}</td>
+                    <td style={{ color: 'var(--text-muted)' }}>{r.driver_name || '—'}</td>
                     <td>
                       <div className="row-actions">
                         <button className="btn btn-ghost btn-sm" onClick={() => setModalReservation(r)}>
