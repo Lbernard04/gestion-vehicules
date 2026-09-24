@@ -86,6 +86,15 @@ export function isWithinRange(now: Date, startIso: string, endIso: string): bool
   return now >= start && now < end;
 }
 
+export type ReservationStatus = 'upcoming' | 'ongoing' | 'past';
+
+// État calculé automatiquement à partir des dates, jamais stocké en base.
+export function getReservationStatus(startIso: string, endIso: string, now: Date = new Date()): ReservationStatus {
+  if (now < new Date(startIso)) return 'upcoming';
+  if (now >= new Date(endIso)) return 'past';
+  return 'ongoing';
+}
+
 // Convertit un ISO en valeur compatible avec <input type="datetime-local">,
 // en respectant l'heure locale du navigateur (pas l'UTC).
 export function toLocalInputValue(iso: string): string {

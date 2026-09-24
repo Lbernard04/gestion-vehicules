@@ -3,7 +3,8 @@
 import { useMemo } from 'react';
 import ConfigWarning from '../components/ConfigWarning';
 import StatusBadge from '../components/StatusBadge';
-import { listReservations, listVehicles } from '../lib/queries';
+import VehicleWarnings from '../components/VehicleWarnings';
+import { listReservations, listVehicleWarnings, listVehicles } from '../lib/queries';
 import { useRealtimeList } from '../lib/useRealtimeList';
 import { formatRange, isWithinRange } from '../lib/date';
 import { supabase } from '../lib/supabase';
@@ -11,6 +12,7 @@ import { supabase } from '../lib/supabase';
 export default function DashboardPage() {
   const vehicles = useRealtimeList('vehicles', listVehicles);
   const reservations = useRealtimeList('reservations', listReservations);
+  const warnings = useRealtimeList('vehicle_warnings', listVehicleWarnings);
 
   const now = useMemo(() => new Date(), [reservations.items]);
 
@@ -35,7 +37,7 @@ export default function DashboardPage() {
     })
     .sort((a, b) => a.start_at.localeCompare(b.start_at));
 
-  const loading = vehicles.loading || reservations.loading;
+  const loading = vehicles.loading || reservations.loading || warnings.loading;
 
   return (
     <div className="page">
@@ -81,6 +83,7 @@ export default function DashboardPage() {
                       <th>Véhicule</th>
                       <th>Immatriculation</th>
                       <th>Statut</th>
+                      <th>Avertissements</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -94,6 +97,12 @@ export default function DashboardPage() {
                           ) : (
                             <StatusBadge status="available" label="Disponible" />
                           )}
+                        </td>
+                        <td>
+                          <VehicleWarnings
+                            vehicleId={v.id}
+                            warnings={warnings.items.filter((w) => w.vehicle_id === v.id)}
+                          />
                         </td>
                       </tr>
                     ))}
@@ -116,6 +125,7 @@ export default function DashboardPage() {
                       <th>Véhicule</th>
                       <th>Entité</th>
                       <th>Commentaire</th>
+                      <th>Message conducteur</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -125,6 +135,7 @@ export default function DashboardPage() {
                         <td>{r.vehicle ? `${r.vehicle.name}${r.vehicle.registration ? ` (${r.vehicle.registration})` : ''}` : '—'}</td>
                         <td>{r.entity?.name ?? '—'}</td>
                         <td style={{ color: 'var(--text-muted)' }}>{r.comment || '—'}</td>
+                        <td style={{ color: 'var(--text-muted)' }}>{r.driver_note || '—'}</td>
                       </tr>
                     ))}
                   </tbody>

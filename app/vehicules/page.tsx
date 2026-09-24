@@ -5,7 +5,8 @@ import AdminGate from '../../components/AdminGate';
 import ConfigWarning from '../../components/ConfigWarning';
 import StatusBadge from '../../components/StatusBadge';
 import VehicleFormModal from '../../components/VehicleFormModal';
-import { deleteVehicle, getErrorMessage, listVehicles, updateVehicle } from '../../lib/queries';
+import VehicleWarnings from '../../components/VehicleWarnings';
+import { deleteVehicle, getErrorMessage, listVehicleWarnings, listVehicles, updateVehicle } from '../../lib/queries';
 import { useRealtimeList } from '../../lib/useRealtimeList';
 import { FUEL_LABELS } from '../../lib/fuel';
 import { supabase } from '../../lib/supabase';
@@ -21,6 +22,7 @@ export default function VehiclesPage() {
 
 function VehiclesPageContent() {
   const { items: vehicles, loading, error, reload } = useRealtimeList('vehicles', listVehicles);
+  const { items: warnings } = useRealtimeList('vehicle_warnings', listVehicleWarnings);
   const [modalVehicle, setModalVehicle] = useState<Vehicle | null | 'new'>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -28,15 +30,6 @@ function VehiclesPageContent() {
     setActionError(null);
     try {
       await updateVehicle(vehicle.id, { active: !vehicle.active });
-    } catch (err) {
-      setActionError(getErrorMessage(err));
-    }
-  }
-
-  async function toggleNeedsRefuel(vehicle: Vehicle) {
-    setActionError(null);
-    try {
-      await updateVehicle(vehicle.id, { needs_refuel: !vehicle.needs_refuel });
     } catch (err) {
       setActionError(getErrorMessage(err));
     }
@@ -86,6 +79,7 @@ function VehiclesPageContent() {
                   <th>Type</th>
                   <th>Carburant</th>
                   <th>Statut</th>
+                  <th>Avertissements</th>
                   <th></th>
                 </tr>
               </thead>
@@ -99,22 +93,22 @@ function VehiclesPageContent() {
                       {vehicle.fuel_type ? FUEL_LABELS[vehicle.fuel_type] : '—'}
                     </td>
                     <td>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        {vehicle.active ? (
-                          <StatusBadge status="available" label="Actif" />
-                        ) : (
-                          <StatusBadge status="inactive" label="Désactivé" />
-                        )}
-                        {vehicle.needs_refuel && <StatusBadge status="busy" label="⛽ Plein à faire" />}
-                      </div>
+                      {vehicle.active ? (
+                        <StatusBadge status="available" label="Actif" />
+                      ) : (
+                        <StatusBadge status="inactive" label="Désactivé" />
+                      )}
+                    </td>
+                    <td>
+                      <VehicleWarnings
+                        vehicleId={vehicle.id}
+                        warnings={warnings.filter((w) => w.vehicle_id === vehicle.id)}
+                      />
                     </td>
                     <td>
                       <div className="row-actions">
                         <button className="btn btn-ghost btn-sm" onClick={() => setModalVehicle(vehicle)}>
                           Modifier
-                        </button>
-                        <button className="btn btn-ghost btn-sm" onClick={() => toggleNeedsRefuel(vehicle)}>
-                          {vehicle.needs_refuel ? 'Plein fait' : 'Signaler plein'}
                         </button>
                         <button className="btn btn-ghost btn-sm" onClick={() => toggleActive(vehicle)}>
                           {vehicle.active ? 'Désactiver' : 'Activer'}

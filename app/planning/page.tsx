@@ -3,9 +3,10 @@
 import { useMemo, useState } from 'react';
 import ConfigWarning from '../../components/ConfigWarning';
 import ReservationFormModal from '../../components/ReservationFormModal';
-import { listEntities, listReservations, listVehicles } from '../../lib/queries';
+import { listEntities, listReservations, listVehicleWarnings, listVehicles } from '../../lib/queries';
 import { useRealtimeList } from '../../lib/useRealtimeList';
 import { addDays, formatDateLong, formatTime, isSameDay, startOfWeek } from '../../lib/date';
+import { WARNING_ICONS } from '../../lib/warnings';
 import { supabase } from '../../lib/supabase';
 import type { ReservationWithRelations } from '../../lib/types';
 
@@ -18,6 +19,7 @@ export default function PlanningPage() {
     listReservations
   );
   const { items: entities } = useRealtimeList('entities', listEntities);
+  const { items: warnings } = useRealtimeList('vehicle_warnings', listVehicleWarnings);
 
   const [weekAnchor, setWeekAnchor] = useState(() => new Date());
   const [modalReservation, setModalReservation] = useState<ReservationWithRelations | null>(null);
@@ -85,34 +87,42 @@ export default function PlanningPage() {
             </div>
           ))}
 
-          {sortedVehicles.map((vehicle) => (
-            <div key={vehicle.id} style={{ display: 'contents' }}>
-              <div className="planning-vehicle-cell" style={{ opacity: vehicle.active ? 1 : 0.55 }}>
-                <span className="planning-vehicle-name">
-                  {vehicle.name}
-                  {vehicle.needs_refuel && <span title="Plein à faire"> ⛽</span>}
-                </span>
-                {vehicle.registration && <span className="planning-vehicle-plate">{vehicle.registration}</span>}
-              </div>
-              {days.map((day, i) => (
-                <div key={i} className="planning-cell">
-                  {reservationsFor(vehicle.id, day).map((r) => (
-                    <button
-                      key={r.id}
-                      className="planning-chip"
-                      onClick={() => setModalReservation(r)}
-                      title={r.comment ?? undefined}
-                    >
-                      <strong>
-                        {formatTime(r.start_at)}–{formatTime(r.end_at)}
-                      </strong>
-                      {r.entity?.name ?? '—'}
-                    </button>
-                  ))}
+          {sortedVehicles.map((vehicle) => {
+            const vehicleWarnings = warnings.filter((w) => w.vehicle_id === vehicle.id);
+            return (
+              <div key={vehicle.id} style={{ display: 'contents' }}>
+                <div className="planning-vehicle-cell" style={{ opacity: vehicle.active ? 1 : 0.55 }}>
+                  <span className="planning-vehicle-name">
+                    {vehicle.name}
+                    {vehicleWarnings.length > 0 && (
+                      <span title={vehicleWarnings.map((w) => w.type).join(', ')}>
+                        {' '}
+                        {vehicleWarnings.map((w) => WARNING_ICONS[w.type]).join('')}
+                      </span>
+                    )}
+                  </span>
+                  {vehicle.registration && <span className="planning-vehicle-plate">{vehicle.registration}</span>}
                 </div>
-              ))}
-            </div>
-          ))}
+                {days.map((day, i) => (
+                  <div key={i} className="planning-cell">
+                    {reservationsFor(vehicle.id, day).map((r) => (
+                      <button
+                        key={r.id}
+                        className="planning-chip"
+                        onClick={() => setModalReservation(r)}
+                        title={[r.comment, r.driver_note].filter(Boolean).join(' — ') || undefined}
+                      >
+                        <strong>
+                          {formatTime(r.start_at)}–{formatTime(r.end_at)}
+                        </strong>
+                        {r.entity?.name ?? '—'}
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -121,6 +131,7 @@ export default function PlanningPage() {
           reservation={modalReservation}
           vehicles={vehicles}
           entities={entities}
+          warnings={warnings}
           onClose={() => setModalReservation(null)}
           onSaved={() => {
             setModalReservation(null);

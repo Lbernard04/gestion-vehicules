@@ -19,7 +19,6 @@ export default function VehicleFormModal({
   const [registration, setRegistration] = useState(vehicle?.registration ?? '');
   const [type, setType] = useState(vehicle?.type ?? '');
   const [fuelType, setFuelType] = useState<FuelType | ''>(vehicle?.fuel_type ?? '');
-  const [needsRefuel, setNeedsRefuel] = useState(vehicle?.needs_refuel ?? false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,7 +38,6 @@ export default function VehicleFormModal({
         registration: registration.trim() ? registration.trim().toUpperCase() : null,
         type: type.trim() || null,
         fuel_type: fuelType || null,
-        needs_refuel: needsRefuel,
       };
       if (vehicle) {
         await updateVehicle(vehicle.id, payload);
@@ -102,11 +100,6 @@ export default function VehicleFormModal({
             ))}
           </select>
         </div>
-
-        <label className="checkbox-row">
-          <input type="checkbox" checked={needsRefuel} onChange={(e) => setNeedsRefuel(e.target.checked)} />
-          Signaler qu’il faut faire le plein
-        </label>
 
         <div className="form-actions">
           <button type="button" className="btn btn-ghost" onClick={onClose}>

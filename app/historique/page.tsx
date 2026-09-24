@@ -6,13 +6,15 @@ import StatusBadge from '../../components/StatusBadge';
 import { listActivityLog, listEntities, listVehicles } from '../../lib/queries';
 import { useRealtimeList } from '../../lib/useRealtimeList';
 import { formatDateTime } from '../../lib/date';
+import { WARNING_LABELS } from '../../lib/warnings';
 import { supabase } from '../../lib/supabase';
-import type { ActivityLogEntry, Entity, Vehicle } from '../../lib/types';
+import type { ActivityLogEntry, Entity, Vehicle, VehicleWarningType } from '../../lib/types';
 
 const TABLE_LABELS: Record<ActivityLogEntry['table_name'], string> = {
   vehicles: 'Véhicule',
   entities: 'Entité',
   reservations: 'Réservation',
+  vehicle_warnings: 'Avertissement',
 };
 
 const ACTION_LABELS: Record<ActivityLogEntry['action'], string> = {
@@ -46,6 +48,14 @@ function describeEntry(
 
   if (entry.table_name === 'entities') {
     return asString(data.name) ?? 'Entité';
+  }
+
+  if (entry.table_name === 'vehicle_warnings') {
+    const vehicleId = asString(data.vehicle_id);
+    const type = asString(data.type) as VehicleWarningType | null;
+    const vehicleLabel = (vehicleId && vehiclesById.get(vehicleId)?.name) || 'véhicule supprimé';
+    const typeLabel = type ? WARNING_LABELS[type] ?? type : 'avertissement';
+    return `${typeLabel} — ${vehicleLabel}`;
   }
 
   // reservations

@@ -9,7 +9,6 @@ create table if not exists public.vehicles (
   registration text unique,
   type text,
   fuel_type text,
-  needs_refuel boolean not null default false,
   active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -18,14 +17,56 @@ create table if not exists public.vehicles (
 -- L'immatriculation est optionnelle (table déjà existante : on retire la contrainte).
 alter table public.vehicles alter column registration drop not null;
 
--- Carburant (optionnel) et signal "plein à faire" (table déjà existante : on ajoute les colonnes).
+-- Carburant (optionnel) (table déjà existante : on ajoute la colonne).
 alter table public.vehicles add column if not exists fuel_type text;
-alter table public.vehicles add column if not exists needs_refuel boolean not null default false;
 
 alter table public.vehicles drop constraint if exists vehicles_fuel_type_check;
 alter table public.vehicles
   add constraint vehicles_fuel_type_check
   check (fuel_type is null or fuel_type in ('essence', 'diesel', 'hybride', 'electrique'));
+
+-- Remplacé par la table vehicle_warnings (avertissements multiples et typés) ci-dessous.
+alter table public.vehicles drop column if exists needs_refuel;
+
+-- Avertissements sur un véhicule (plein, garage, contrôle technique...), ajoutables et
+-- levables depuis le tableau de bord. Un avertissement actif = une ligne dans cette table ;
+-- le "décocher" du côté app supprime simplement la ligne.
+create table if not exists public.vehicle_warnings (
+  id uuid primary key default gen_random_uuid(),
+  vehicle_id uuid not null references public.vehicles(id) on delete cascade,
+  type text not null check (type in ('plein', 'garage', 'controle_technique')),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists vehicle_warnings_vehicle_id_idx on public.vehicle_warnings(vehicle_id);
+
+alter table public.vehicle_warnings enable row level security;
+
+grant select, insert, update, delete on public.vehicle_warnings to anon;
+
+drop policy if exists "anon_read_vehicle_warnings" on public.vehicle_warnings;
+create policy "anon_read_vehicle_warnings"
+on public.vehicle_warnings for select to anon, authenticated using (true);
+
+drop policy if exists "anon_insert_vehicle_warnings" on public.vehicle_warnings;
+create policy "anon_insert_vehicle_warnings"
+on public.vehicle_warnings for insert to anon, authenticated with check (true);
+
+drop policy if exists "anon_delete_vehicle_warnings" on public.vehicle_warnings;
+create policy "anon_delete_vehicle_warnings"
+on public.vehicle_warnings for delete to anon, authenticated using (true);
+
+alter table public.vehicle_warnings replica identity full;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'vehicle_warnings'
+  ) then
+    alter publication supabase_realtime add table public.vehicle_warnings;
+  end if;
+end $$;
 
 create table if not exists public.entities (
   id uuid primary key default gen_random_uuid(),
@@ -43,10 +84,14 @@ create table if not exists public.reservations (
   start_at timestamptz not null,
   end_at timestamptz not null,
   comment text,
+  driver_note text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint reservations_dates_valid check (end_at > start_at)
 );
+
+-- Message libre à destination du conducteur (table déjà existante : on ajoute la colonne).
+alter table public.reservations add column if not exists driver_note text;
 
 -- Empêche deux réservations qui se chevauchent pour le même véhicule.
 alter table public.reservations
@@ -251,6 +296,11 @@ for each row execute function public.log_activity();
 drop trigger if exists reservations_log_activity on public.reservations;
 create trigger reservations_log_activity
 after insert or update or delete on public.reservations
+for each row execute function public.log_activity();
+
+drop trigger if exists vehicle_warnings_log_activity on public.vehicle_warnings;
+create trigger vehicle_warnings_log_activity
+after insert or update or delete on public.vehicle_warnings
 for each row execute function public.log_activity();
 
 -- Active le flux Realtime sur l'historique aussi.

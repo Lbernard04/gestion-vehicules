@@ -4,7 +4,8 @@ import { FormEvent, useState } from 'react';
 import Modal from './Modal';
 import { createReservation, deleteReservation, getErrorMessage, hasConflict, updateReservation } from '../lib/queries';
 import { fromLocalInputValue, toLocalInputValue } from '../lib/date';
-import type { Entity, ReservationWithRelations, Vehicle } from '../lib/types';
+import { WARNING_ICONS, WARNING_LABELS } from '../lib/warnings';
+import type { Entity, ReservationWithRelations, Vehicle, VehicleWarning } from '../lib/types';
 
 function defaultStart(): string {
   const d = new Date();
@@ -23,6 +24,7 @@ export default function ReservationFormModal({
   reservation,
   vehicles,
   entities,
+  warnings,
   defaultVehicleId,
   onClose,
   onSaved,
@@ -30,6 +32,7 @@ export default function ReservationFormModal({
   reservation: ReservationWithRelations | null;
   vehicles: Vehicle[];
   entities: Entity[];
+  warnings: VehicleWarning[];
   defaultVehicleId?: string;
   onClose: () => void;
   onSaved: () => void;
@@ -41,6 +44,7 @@ export default function ReservationFormModal({
   );
   const [endAt, setEndAt] = useState(toLocalInputValue(reservation?.end_at ?? defaultEnd()));
   const [comment, setComment] = useState(reservation?.comment ?? '');
+  const [driverNote, setDriverNote] = useState(reservation?.driver_note ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -95,6 +99,7 @@ export default function ReservationFormModal({
         start_at: startIso,
         end_at: endIso,
         comment: comment.trim() || null,
+        driver_note: driverNote.trim() || null,
       };
 
       if (reservation) {
@@ -110,15 +115,16 @@ export default function ReservationFormModal({
     }
   }
 
-  const selectedVehicle = vehicles.find((v) => v.id === vehicleId);
+  const selectedVehicleWarnings = warnings.filter((w) => w.vehicle_id === vehicleId);
 
   return (
     <Modal title={reservation ? 'Modifier la réservation' : 'Nouvelle réservation'} onClose={onClose}>
       <form onSubmit={handleSubmit}>
         {error && <div className="form-error">{error}</div>}
-        {selectedVehicle?.needs_refuel && (
+        {selectedVehicleWarnings.length > 0 && (
           <div className="form-warning">
-            ⛽ Ce véhicule doit être ravitaillé : pensez à faire le plein avant votre trajet.
+            {selectedVehicleWarnings.map((w) => `${WARNING_ICONS[w.type]} ${WARNING_LABELS[w.type]}`).join(' · ')}
+            {' — à anticiper avant votre trajet.'}
           </div>
         )}
 
@@ -126,14 +132,17 @@ export default function ReservationFormModal({
           <label htmlFor="reservation-vehicle">Véhicule</label>
           <select id="reservation-vehicle" value={vehicleId} onChange={(e) => setVehicleId(e.target.value)}>
             {vehicles.length === 0 && <option value="">Aucun véhicule</option>}
-            {vehicles.map((v) => (
-              <option key={v.id} value={v.id} disabled={!v.active}>
-                {v.name}
-                {v.registration ? ` — ${v.registration}` : ''}
-                {v.needs_refuel ? ' • ⛽ plein à faire' : ''}
-                {!v.active ? ' (désactivé)' : ''}
-              </option>
-            ))}
+            {vehicles.map((v) => {
+              const vehicleWarnings = warnings.filter((w) => w.vehicle_id === v.id);
+              return (
+                <option key={v.id} value={v.id} disabled={!v.active}>
+                  {v.name}
+                  {v.registration ? ` — ${v.registration}` : ''}
+                  {vehicleWarnings.length > 0 ? ` • ${vehicleWarnings.map((w) => WARNING_ICONS[w.type]).join('')}` : ''}
+                  {!v.active ? ' (désactivé)' : ''}
+                </option>
+              );
+            })}
           </select>
         </div>
 
@@ -179,6 +188,17 @@ export default function ReservationFormModal({
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Motif du déplacement, précisions…"
+          />
+        </div>
+
+        <div className="field">
+          <label htmlFor="reservation-driver-note">Message pour le conducteur (optionnel)</label>
+          <textarea
+            id="reservation-driver-note"
+            rows={2}
+            value={driverNote}
+            onChange={(e) => setDriverNote(e.target.value)}
+            placeholder="Ex : badge dans la boîte à gants, code du parking, point de retour…"
           />
         </div>
 

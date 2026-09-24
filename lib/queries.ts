@@ -1,5 +1,14 @@
 import { supabase } from './supabase';
-import type { ActivityLogEntry, Entity, FuelType, Reservation, ReservationWithRelations, Vehicle } from './types';
+import type {
+  ActivityLogEntry,
+  Entity,
+  FuelType,
+  Reservation,
+  ReservationWithRelations,
+  Vehicle,
+  VehicleWarning,
+  VehicleWarningType,
+} from './types';
 
 // Message d'erreur unique si les variables d'environnement Supabase manquent,
 // pour que l'UI puisse afficher un message clair au lieu d'un crash silencieux.
@@ -52,7 +61,6 @@ export async function createVehicle(input: {
   registration: string | null;
   type: string | null;
   fuel_type: FuelType | null;
-  needs_refuel: boolean;
 }): Promise<void> {
   const client = requireClient();
   const { error } = await client.from('vehicles').insert(input);
@@ -61,7 +69,7 @@ export async function createVehicle(input: {
 
 export async function updateVehicle(
   id: string,
-  input: Partial<Pick<Vehicle, 'name' | 'registration' | 'type' | 'fuel_type' | 'needs_refuel' | 'active'>>
+  input: Partial<Pick<Vehicle, 'name' | 'registration' | 'type' | 'fuel_type' | 'active'>>
 ): Promise<void> {
   const client = requireClient();
   const { error } = await client.from('vehicles').update(input).eq('id', id);
@@ -71,6 +79,27 @@ export async function updateVehicle(
 export async function deleteVehicle(id: string): Promise<void> {
   const client = requireClient();
   const { error } = await client.from('vehicles').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- Avertissements véhicule ----------
+
+export async function listVehicleWarnings(): Promise<VehicleWarning[]> {
+  const client = requireClient();
+  const { data, error } = await client.from('vehicle_warnings').select('*').order('created_at');
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function addVehicleWarning(vehicleId: string, type: VehicleWarningType): Promise<void> {
+  const client = requireClient();
+  const { error } = await client.from('vehicle_warnings').insert({ vehicle_id: vehicleId, type });
+  if (error) throw error;
+}
+
+export async function removeVehicleWarning(id: string): Promise<void> {
+  const client = requireClient();
+  const { error } = await client.from('vehicle_warnings').delete().eq('id', id);
   if (error) throw error;
 }
 
@@ -124,6 +153,7 @@ export async function createReservation(input: {
   start_at: string;
   end_at: string;
   comment: string | null;
+  driver_note: string | null;
 }): Promise<void> {
   const client = requireClient();
   const { error } = await client.from('reservations').insert(input);
@@ -132,7 +162,7 @@ export async function createReservation(input: {
 
 export async function updateReservation(
   id: string,
-  input: Partial<Pick<Reservation, 'vehicle_id' | 'entity_id' | 'start_at' | 'end_at' | 'comment'>>
+  input: Partial<Pick<Reservation, 'vehicle_id' | 'entity_id' | 'start_at' | 'end_at' | 'comment' | 'driver_note'>>
 ): Promise<void> {
   const client = requireClient();
   const { error } = await client.from('reservations').update(input).eq('id', id);
