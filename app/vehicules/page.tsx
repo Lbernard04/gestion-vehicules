@@ -7,6 +7,7 @@ import StatusBadge from '../../components/StatusBadge';
 import VehicleFormModal from '../../components/VehicleFormModal';
 import { deleteVehicle, getErrorMessage, listVehicles, updateVehicle } from '../../lib/queries';
 import { useRealtimeList } from '../../lib/useRealtimeList';
+import { FUEL_LABELS } from '../../lib/fuel';
 import { supabase } from '../../lib/supabase';
 import type { Vehicle } from '../../lib/types';
 
@@ -27,6 +28,15 @@ function VehiclesPageContent() {
     setActionError(null);
     try {
       await updateVehicle(vehicle.id, { active: !vehicle.active });
+    } catch (err) {
+      setActionError(getErrorMessage(err));
+    }
+  }
+
+  async function toggleNeedsRefuel(vehicle: Vehicle) {
+    setActionError(null);
+    try {
+      await updateVehicle(vehicle.id, { needs_refuel: !vehicle.needs_refuel });
     } catch (err) {
       setActionError(getErrorMessage(err));
     }
@@ -74,6 +84,7 @@ function VehiclesPageContent() {
                   <th>Nom</th>
                   <th>Immatriculation</th>
                   <th>Type</th>
+                  <th>Carburant</th>
                   <th>Statut</th>
                   <th></th>
                 </tr>
@@ -84,17 +95,26 @@ function VehiclesPageContent() {
                     <td>{vehicle.name}</td>
                     <td className="plate">{vehicle.registration || '—'}</td>
                     <td style={{ color: 'var(--text-muted)' }}>{vehicle.type || '—'}</td>
+                    <td style={{ color: 'var(--text-muted)' }}>
+                      {vehicle.fuel_type ? FUEL_LABELS[vehicle.fuel_type] : '—'}
+                    </td>
                     <td>
-                      {vehicle.active ? (
-                        <StatusBadge status="available" label="Actif" />
-                      ) : (
-                        <StatusBadge status="inactive" label="Désactivé" />
-                      )}
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        {vehicle.active ? (
+                          <StatusBadge status="available" label="Actif" />
+                        ) : (
+                          <StatusBadge status="inactive" label="Désactivé" />
+                        )}
+                        {vehicle.needs_refuel && <StatusBadge status="busy" label="⛽ Plein à faire" />}
+                      </div>
                     </td>
                     <td>
                       <div className="row-actions">
                         <button className="btn btn-ghost btn-sm" onClick={() => setModalVehicle(vehicle)}>
                           Modifier
+                        </button>
+                        <button className="btn btn-ghost btn-sm" onClick={() => toggleNeedsRefuel(vehicle)}>
+                          {vehicle.needs_refuel ? 'Plein fait' : 'Signaler plein'}
                         </button>
                         <button className="btn btn-ghost btn-sm" onClick={() => toggleActive(vehicle)}>
                           {vehicle.active ? 'Désactiver' : 'Activer'}

@@ -3,7 +3,8 @@
 import { FormEvent, useState } from 'react';
 import Modal from './Modal';
 import { createVehicle, getErrorMessage, updateVehicle } from '../lib/queries';
-import type { Vehicle } from '../lib/types';
+import { FUEL_LABELS, FUEL_TYPES } from '../lib/fuel';
+import type { FuelType, Vehicle } from '../lib/types';
 
 export default function VehicleFormModal({
   vehicle,
@@ -17,6 +18,8 @@ export default function VehicleFormModal({
   const [name, setName] = useState(vehicle?.name ?? '');
   const [registration, setRegistration] = useState(vehicle?.registration ?? '');
   const [type, setType] = useState(vehicle?.type ?? '');
+  const [fuelType, setFuelType] = useState<FuelType | ''>(vehicle?.fuel_type ?? '');
+  const [needsRefuel, setNeedsRefuel] = useState(vehicle?.needs_refuel ?? false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,6 +38,8 @@ export default function VehicleFormModal({
         name: name.trim(),
         registration: registration.trim() ? registration.trim().toUpperCase() : null,
         type: type.trim() || null,
+        fuel_type: fuelType || null,
+        needs_refuel: needsRefuel,
       };
       if (vehicle) {
         await updateVehicle(vehicle.id, payload);
@@ -85,6 +90,23 @@ export default function VehicleFormModal({
             placeholder="Utilitaire, berline, camion…"
           />
         </div>
+
+        <div className="field">
+          <label htmlFor="vehicle-fuel">Carburant (optionnel)</label>
+          <select id="vehicle-fuel" value={fuelType} onChange={(e) => setFuelType(e.target.value as FuelType | '')}>
+            <option value="">Non renseigné</option>
+            {FUEL_TYPES.map((f) => (
+              <option key={f} value={f}>
+                {FUEL_LABELS[f]}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <label className="checkbox-row">
+          <input type="checkbox" checked={needsRefuel} onChange={(e) => setNeedsRefuel(e.target.checked)} />
+          Signaler qu’il faut faire le plein
+        </label>
 
         <div className="form-actions">
           <button type="button" className="btn btn-ghost" onClick={onClose}>

@@ -1,8 +1,12 @@
+export type FuelType = 'essence' | 'diesel' | 'hybride' | 'electrique';
+
 export interface Vehicle {
   id: string;
   name: string;
   registration: string | null;
   type: string | null;
+  fuel_type: FuelType | null;
+  needs_refuel: boolean;
   active: boolean;
   created_at: string;
   updated_at: string;

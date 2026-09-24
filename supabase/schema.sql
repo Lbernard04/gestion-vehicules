@@ -8,6 +8,8 @@ create table if not exists public.vehicles (
   name text not null,
   registration text unique,
   type text,
+  fuel_type text,
+  needs_refuel boolean not null default false,
   active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -15,6 +17,15 @@ create table if not exists public.vehicles (
 
 -- L'immatriculation est optionnelle (table déjà existante : on retire la contrainte).
 alter table public.vehicles alter column registration drop not null;
+
+-- Carburant (optionnel) et signal "plein à faire" (table déjà existante : on ajoute les colonnes).
+alter table public.vehicles add column if not exists fuel_type text;
+alter table public.vehicles add column if not exists needs_refuel boolean not null default false;
+
+alter table public.vehicles drop constraint if exists vehicles_fuel_type_check;
+alter table public.vehicles
+  add constraint vehicles_fuel_type_check
+  check (fuel_type is null or fuel_type in ('essence', 'diesel', 'hybride', 'electrique'));
 
 create table if not exists public.entities (
   id uuid primary key default gen_random_uuid(),

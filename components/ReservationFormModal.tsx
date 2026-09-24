@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from 'react';
 import Modal from './Modal';
-import { createReservation, getErrorMessage, hasConflict, updateReservation } from '../lib/queries';
+import { createReservation, deleteReservation, getErrorMessage, hasConflict, updateReservation } from '../lib/queries';
 import { fromLocalInputValue, toLocalInputValue } from '../lib/date';
 import type { Entity, ReservationWithRelations, Vehicle } from '../lib/types';
 
@@ -43,6 +43,20 @@ export default function ReservationFormModal({
   const [comment, setComment] = useState(reservation?.comment ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function handleDelete() {
+    if (!reservation) return;
+    if (!confirm('Annuler cette réservation ?')) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await deleteReservation(reservation.id);
+      onSaved();
+    } catch (err) {
+      setError(getErrorMessage(err));
+      setSaving(false);
+    }
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -96,10 +110,17 @@ export default function ReservationFormModal({
     }
   }
 
+  const selectedVehicle = vehicles.find((v) => v.id === vehicleId);
+
   return (
     <Modal title={reservation ? 'Modifier la réservation' : 'Nouvelle réservation'} onClose={onClose}>
       <form onSubmit={handleSubmit}>
         {error && <div className="form-error">{error}</div>}
+        {selectedVehicle?.needs_refuel && (
+          <div className="form-warning">
+            ⛽ Ce véhicule doit être ravitaillé : pensez à faire le plein avant votre trajet.
+          </div>
+        )}
 
         <div className="field">
           <label htmlFor="reservation-vehicle">Véhicule</label>
@@ -109,6 +130,7 @@ export default function ReservationFormModal({
               <option key={v.id} value={v.id} disabled={!v.active}>
                 {v.name}
                 {v.registration ? ` — ${v.registration}` : ''}
+                {v.needs_refuel ? ' • ⛽ plein à faire' : ''}
                 {!v.active ? ' (désactivé)' : ''}
               </option>
             ))}
@@ -160,13 +182,20 @@ export default function ReservationFormModal({
           />
         </div>
 
-        <div className="form-actions">
-          <button type="button" className="btn btn-ghost" onClick={onClose}>
-            Annuler
-          </button>
-          <button type="submit" className="btn btn-primary" disabled={saving || vehicles.length === 0 || entities.length === 0}>
-            {saving ? 'Enregistrement…' : 'Enregistrer'}
-          </button>
+        <div className="form-actions" style={{ justifyContent: reservation ? 'space-between' : 'flex-end' }}>
+          {reservation && (
+            <button type="button" className="btn btn-danger" onClick={handleDelete} disabled={saving}>
+              Annuler la réservation
+            </button>
+          )}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button type="button" className="btn btn-ghost" onClick={onClose}>
+              Fermer
+            </button>
+            <button type="submit" className="btn btn-primary" disabled={saving || vehicles.length === 0 || entities.length === 0}>
+              {saving ? 'Enregistrement…' : 'Enregistrer'}
+            </button>
+          </div>
         </div>
       </form>
     </Modal>

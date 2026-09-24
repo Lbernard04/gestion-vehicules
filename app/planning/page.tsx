@@ -88,7 +88,10 @@ export default function PlanningPage() {
           {sortedVehicles.map((vehicle) => (
             <div key={vehicle.id} style={{ display: 'contents' }}>
               <div className="planning-vehicle-cell" style={{ opacity: vehicle.active ? 1 : 0.55 }}>
-                <span className="planning-vehicle-name">{vehicle.name}</span>
+                <span className="planning-vehicle-name">
+                  {vehicle.name}
+                  {vehicle.needs_refuel && <span title="Plein à faire"> ⛽</span>}
+                </span>
                 {vehicle.registration && <span className="planning-vehicle-plate">{vehicle.registration}</span>}
               </div>
               {days.map((day, i) => (

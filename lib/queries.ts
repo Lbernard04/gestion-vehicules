@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { ActivityLogEntry, Entity, Reservation, ReservationWithRelations, Vehicle } from './types';
+import type { ActivityLogEntry, Entity, FuelType, Reservation, ReservationWithRelations, Vehicle } from './types';
 
 // Message d'erreur unique si les variables d'environnement Supabase manquent,
 // pour que l'UI puisse afficher un message clair au lieu d'un crash silencieux.
@@ -51,6 +51,8 @@ export async function createVehicle(input: {
   name: string;
   registration: string | null;
   type: string | null;
+  fuel_type: FuelType | null;
+  needs_refuel: boolean;
 }): Promise<void> {
   const client = requireClient();
   const { error } = await client.from('vehicles').insert(input);
@@ -59,7 +61,7 @@ export async function createVehicle(input: {
 
 export async function updateVehicle(
   id: string,
-  input: Partial<Pick<Vehicle, 'name' | 'registration' | 'type' | 'active'>>
+  input: Partial<Pick<Vehicle, 'name' | 'registration' | 'type' | 'fuel_type' | 'needs_refuel' | 'active'>>
 ): Promise<void> {
   const client = requireClient();
   const { error } = await client.from('vehicles').update(input).eq('id', id);
