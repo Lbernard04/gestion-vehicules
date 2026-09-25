@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { addVehicleWarning, getErrorMessage, removeVehicleWarning } from '../lib/queries';
 import { WARNING_ICONS, WARNING_LABELS, WARNING_TYPES } from '../lib/warnings';
 import type { VehicleWarning, VehicleWarningType } from '../lib/types';
@@ -15,6 +15,20 @@ export default function VehicleWarnings({
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function handleClickOutside(event: MouseEvent) {
+      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
 
   const activeTypes = new Set(warnings.map((w) => w.type));
   const available = WARNING_TYPES.filter((t) => !activeTypes.has(t));
@@ -60,7 +74,7 @@ export default function VehicleWarnings({
         </button>
       ))}
 
-      <div style={{ position: 'relative' }}>
+      <div ref={popoverRef} style={{ position: 'relative' }}>
         <button
           type="button"
           className="btn btn-ghost btn-sm"
