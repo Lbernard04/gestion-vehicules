@@ -80,7 +80,7 @@ export default function HistoriquePage() {
   );
 }
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 25;
 
 function HistoriquePageContent() {
   const [limit, setLimit] = useState(PAGE_SIZE);
