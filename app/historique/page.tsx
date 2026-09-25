@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef, useState } from 'react';
 import AdminGate from '../../components/AdminGate';
 import ConfigWarning from '../../components/ConfigWarning';
 import StatusBadge from '../../components/StatusBadge';
@@ -79,13 +80,34 @@ export default function HistoriquePage() {
   );
 }
 
+const PAGE_SIZE = 50;
+
 function HistoriquePageContent() {
-  const { items: entries, loading, error } = useRealtimeList('activity_log', listActivityLog);
+  const [limit, setLimit] = useState(PAGE_SIZE);
+  const limitRef = useRef(limit);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  // Référence stable : useRealtimeList ne recrée pas son abonnement quand
+  // cette fonction change, mais elle lit toujours la valeur actuelle de limitRef.
+  const fetcher = useRef(() => listActivityLog(limitRef.current)).current;
+
+  const { items: entries, loading, error, reload } = useRealtimeList('activity_log', fetcher);
   const { items: vehicles } = useRealtimeList('vehicles', listVehicles);
   const { items: entities } = useRealtimeList('entities', listEntities);
 
   const vehiclesById = new Map(vehicles.map((v) => [v.id, v]));
   const entitiesById = new Map(entities.map((e) => [e.id, e]));
+
+  const hasMore = entries.length >= limit;
+
+  async function handleShowMore() {
+    const next = limit + PAGE_SIZE;
+    limitRef.current = next;
+    setLimit(next);
+    setLoadingMore(true);
+    await reload();
+    setLoadingMore(false);
+  }
 
   return (
     <div className="page">
@@ -131,6 +153,14 @@ function HistoriquePageContent() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {!loading && hasMore && (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '14px 0 4px' }}>
+            <button className="btn btn-ghost btn-sm" onClick={handleShowMore} disabled={loadingMore}>
+              {loadingMore ? 'Chargement…' : 'Voir plus'}
+            </button>
           </div>
         )}
       </div>

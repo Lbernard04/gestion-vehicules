@@ -177,13 +177,13 @@ export async function deleteReservation(id: string): Promise<void> {
 
 // ---------- Historique ----------
 
-export async function listActivityLog(): Promise<ActivityLogEntry[]> {
+export async function listActivityLog(limit = 50): Promise<ActivityLogEntry[]> {
   const client = requireClient();
   const { data, error } = await client
     .from('activity_log')
     .select('*')
     .order('created_at', { ascending: false })
-    .limit(300);
+    .limit(limit);
   if (error) throw error;
   return (data ?? []) as ActivityLogEntry[];
 }
