@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { addVehicleWarning, getErrorMessage, removeVehicleWarning } from '../lib/queries';
 import { WARNING_ICONS, WARNING_LABELS, WARNING_TYPES } from '../lib/warnings';
 import type { VehicleWarning, VehicleWarningType } from '../lib/types';
@@ -15,19 +16,42 @@ export default function VehicleWarnings({
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
 
+    function updatePosition() {
+      const rect = buttonRef.current?.getBoundingClientRect();
+      if (rect) {
+        setPosition({ top: rect.bottom + 6, left: rect.left });
+      }
+    }
+
+    updatePosition();
+
     function handleClickOutside(event: MouseEvent) {
-      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(target)
+      ) {
         setOpen(false);
       }
     }
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
   }, [open]);
 
   const activeTypes = new Set(warnings.map((w) => w.type));
@@ -74,20 +98,24 @@ export default function VehicleWarnings({
         </button>
       ))}
 
-      <div ref={popoverRef} style={{ position: 'relative' }}>
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm"
-          onClick={() => setOpen((v) => !v)}
-          aria-label="Ajouter un avertissement"
-          title="Ajouter un avertissement"
-        >
-          +
-        </button>
-        {open && (
+      <button
+        ref={buttonRef}
+        type="button"
+        className="btn btn-ghost btn-sm"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Ajouter un avertissement"
+        title="Ajouter un avertissement"
+      >
+        +
+      </button>
+
+      {open &&
+        typeof document !== 'undefined' &&
+        createPortal(
           <div
+            ref={popoverRef}
             className="card card-pad"
-            style={{ position: 'absolute', top: '110%', left: 0, zIndex: 30, minWidth: 210 }}
+            style={{ position: 'fixed', top: position.top, left: position.left, zIndex: 1000, minWidth: 210 }}
           >
             {available.length === 0 ? (
               <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
@@ -109,9 +137,9 @@ export default function VehicleWarnings({
                 ))}
               </div>
             )}
-          </div>
+          </div>,
+          document.body
         )}
-      </div>
 
       {error && (
         <div className="form-error" style={{ margin: 0 }}>
